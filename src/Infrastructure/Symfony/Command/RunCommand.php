@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Infrastructure\Symfony\Command;
@@ -14,27 +15,24 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class RunCommand extends Command
 {
     protected static $defaultName = 'chatbot:run';
-    /**
-     * @var Runner
-     */
+
     private Runner $runner;
-    
+
     public function __construct(Runner $runner)
     {
         parent::__construct(null);
         $this->runner = $runner;
     }
-    
+
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        
         $io = new SymfonyStyle($input, $output);
         $this->runner->setCommands([
             Test::class,
             Random::class,
         ]);
         $this->runner->run($io);
-        
+
         return 1;
     }
 }
