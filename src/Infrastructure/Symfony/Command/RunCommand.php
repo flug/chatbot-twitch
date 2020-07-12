@@ -3,8 +3,9 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Symfony\Command;
 
-use App\Infrastructure\Twitch\Client as TwitchClient;
-use App\Infrastructure\Twitch\Message\Parser;
+use App\Application\Runtime\Runner;
+use App\Domain\Command\Random;
+use App\Domain\Command\Test;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -13,31 +14,26 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class RunCommand extends Command
 {
     protected static $defaultName = 'chatbot:run';
-    private TwitchClient $client;
+    /**
+     * @var Runner
+     */
+    private Runner $runner;
     
-    public function __construct(TwitchClient $client)
+    public function __construct(Runner $runner)
     {
         parent::__construct(null);
-        $this->client = $client;
+        $this->runner = $runner;
     }
     
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $this->client->ping();
+        
         $io = new SymfonyStyle($input, $output);
-        while (true) {
-            $content = $this->client->read();
-            if (strstr($content, TwitchClient::PING)) {
-                $this->client->pong();
-                continue;
-            }
-            if (strstr($content, TwitchClient::PRIVATE_MESSAGE)) {
-                $parts = Parser::parse($content);
-                $io->success(trim($parts['nickname'] . ' : ' . $parts['message']));
-                continue;
-            }
-            sleep(5);
-        }
+        $this->runner->setCommands([
+            Test::class,
+            Random::class,
+        ]);
+        $this->runner->run($io);
         
         return 1;
     }

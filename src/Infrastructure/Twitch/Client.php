@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace App\Infrastructure\Twitch;
 
 use App\Infrastructure\Twitch\Exception\ConnectionFailedException;
+use App\Infrastructure\Twitch\Message\Parser;
 use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class Client
 {
@@ -15,20 +17,24 @@ class Client
     private $socket;
     public const PING = 'PING';
     public const PRIVATE_MESSAGE = 'PRIVMSG';
-    
-    /**
-     * @var LoggerInterface
-     */
     private LoggerInterface $logger;
+    private string $nickname;
+    private ?string $message;
     
-    public function __construct(string $oauth, string $nickname, LoggerInterface $logger)
+    public function __construct(string $oauth, string $nickname)
     {
         $this->socket = socket_create(AF_INET, SOCK_STREAM, SOL_TCP);
         if (socket_connect($this->socket, self::TWITCH_IRC_URI, self::TWITCH_IRC_PORT) === false) {
             throw new ConnectionFailedException();
         }
-        $this->logger = $logger;
+        $this->logger = new NullLogger();
+        $this->nickname = $nickname;
         $this->authentication($oauth, $nickname);
+    }
+    
+    public function addLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
     }
     
     private function authentication(string $oauth, string $nickname): void
@@ -46,7 +52,21 @@ class Client
     public function pong()
     {
         $this->send(sprintf('PONG :tmi.twitch.tv'));
+        
+    }
     
+    public function isCommandType(string $commandType): bool
+    {
+        
+        return (bool)strstr($this->message, $commandType);
+    }
+    
+    public function sendMessage(string $message): void
+    {
+        $this->send(strtr('PRIVMSG #<channel> :<message>', [
+            '<channel>' => $this->nickname,
+            '<message>' => $message,
+        ]));
     }
     
     public function send(string $message)
@@ -62,15 +82,16 @@ class Client
         return $this->socket !== null;
     }
     
-    public function read()
+    public function read(): Parser\Message
     {
         if (!$this->isConnected()) {
             throw new ConnectionFailedException();
         }
         $receive = socket_read($this->socket, self::MAX_LINE);
         $this->logger->info('message : ' . $receive);
+        $this->message = $receive;
         
-        return $receive;
+        return Parser::parse($receive);
         
     }
     
