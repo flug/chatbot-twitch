@@ -1,7 +1,24 @@
 <?php
 
+/*
+ * This file is part of the Chatbot project.
+ *
+ * (c) Lemay Marc <flugv1@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
 declare(strict_types=1);
 
+$header = <<<'HEADER'
+    This file is part of the Chatbot project.
+
+    (c) Lemay Marc <flugv1@gmail.com>
+
+    For the full copyright and license information, please view the LICENSE
+    file that was distributed with this source code.
+    HEADER;
 use PedroTroller\CS\Fixer\Fixers;
 use PedroTroller\CS\Fixer\RuleSetFactory;
 
@@ -22,6 +39,10 @@ return PhpCsFixer\Config::create()
                     '='  => 'align_single_space_minimal',
                     '=>' => 'align_single_space_minimal',
                 ],
+            ])
+            ->enable('header_comment', [
+                'header'   => $header,
+                'location' => 'after_open',
             ])
             ->getRules()
     )
