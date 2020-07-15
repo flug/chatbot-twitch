@@ -16,6 +16,7 @@ namespace App\Infrastructure\Symfony\Command;
 use App\Application\Runtime\Runner;
 use App\Domain\Command\Random;
 use App\Domain\Command\Test;
+use App\Domain\Command\Troll;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -39,6 +40,7 @@ class RunCommand extends Command
         $this->runner->setCommands([
             Test::class,
             Random::class,
+            Troll::class
         ]);
         $this->runner->run($io);
 

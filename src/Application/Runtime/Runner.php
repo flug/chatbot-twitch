@@ -47,6 +47,7 @@ class Runner
     {
         do {
             $content = $this->client->read();
+            
             switch (true) {
                 case $this->client->isCommandType(TwitchClient::PING):
                     $this->bus->dispatch(new Ping($this->client, $content));
